@@ -8,7 +8,7 @@ import mekanism.api.chemical.ChemicalStack;
 import mekanism.api.integration.jei.IMekanismJEIHelper;
 import mezz.jei.api.ingredients.IIngredientHelper;
 import mezz.jei.api.ingredients.IIngredientType;
-import tamaized.ae2jeiintegration.api.integrations.jei.IngredientConverter;
+import appeng.client.api.integrations.jei.IngredientConverter;
 
 import appeng.api.stacks.GenericStack;
 
@@ -40,6 +40,6 @@ public class ChemicalIngredientConverter implements IngredientConverter<Chemical
         if (what == null) {
             return null;
         }
-        return new GenericStack(what, chemicalStack.getAmount());
+        return new GenericStack(what, chemicalStack.amount());
     }
 }

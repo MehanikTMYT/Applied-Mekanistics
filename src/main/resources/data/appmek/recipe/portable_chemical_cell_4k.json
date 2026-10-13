@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "appmek:chemical_cell_housing",
+    "ae2:cell_component_4k",
+    "ae2:me_chest",
+    "ae2:energy_cell"
+  ],
+  "result": {
+    "id": "appmek:portable_chemical_cell_4k"
+  }
+}

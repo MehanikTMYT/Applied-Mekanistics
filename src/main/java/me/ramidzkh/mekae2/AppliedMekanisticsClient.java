@@ -1,7 +1,7 @@
 package me.ramidzkh.mekae2;
 
-import net.minecraft.client.color.item.ItemColor;
-import net.minecraft.util.FastColor;
+
+
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 
@@ -13,21 +13,18 @@ import appeng.items.tools.powered.PortableCellItem;
 public class AppliedMekanisticsClient {
 
     public static void initialize(IEventBus bus) {
-        bus.addListener(AppliedMekanisticsClient::registerItemColors);
+        bus.addListener((net.neoforged.fml.event.lifecycle.FMLClientSetupEvent event)->event.enqueueWork(AppliedMekanisticsClient::initializeModels));
         AMChemicalStackRenderer.initialize(bus);
     }
-
-    private static void registerItemColors(RegisterColorHandlersEvent.Item event) {
-        ItemColor cells = (stack, tintIndex) -> {
-            return FastColor.ARGB32.opaque(BasicStorageCell.getColor(stack, tintIndex));
-        };
-        ItemColor portableCells = (stack, tintIndex) -> {
-            return FastColor.ARGB32.opaque(PortableCellItem.getColor(stack, tintIndex));
-        };
-
+    public static void initializeModels() {
         for (var tier : AMItems.Tier.values()) {
-            event.register(cells, AMItems.get(tier)::get);
-            event.register(portableCells, AMItems.getPortableCell(tier)::get);
+            var cell = AMItems.get(tier);
+            var portable = AMItems.getPortableCell(tier);
+            var path = cell.getId().getPath();
+
+            appeng.api.client.StorageCellModels.registerModel(cell.get(), AppliedMekanistics.id("block/drive/cells/" + path));
+            appeng.api.client.StorageCellModels.registerModel(portable.get(), AppliedMekanistics.id("block/drive/cells/" + path));
         }
     }
+
 }

@@ -5,7 +5,9 @@ import net.minecraft.network.chat.Component;
 import me.ramidzkh.mekae2.AMText;
 import me.ramidzkh.mekae2.ae2.MekanismKey;
 import mekanism.api.Action;
-import mekanism.api.chemical.IChemicalHandler;
+import mekanism.api.chemical.ChemicalResource;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import me.ramidzkh.mekae2.ae2.ChemicalTransfer;
 
 import appeng.api.config.Actionable;
 import appeng.api.networking.security.IActionSource;
@@ -14,7 +16,7 @@ import appeng.api.stacks.KeyCounter;
 import appeng.api.storage.MEStorage;
 import appeng.core.localization.GuiText;
 
-public record ChemicalHandlerFacade(IChemicalHandler handler, boolean extractableOnly,
+public record ChemicalHandlerFacade(ResourceHandler<ChemicalResource> handler, boolean extractableOnly,
         Runnable changeListener) implements MEStorage {
 
     /**
@@ -28,8 +30,7 @@ public record ChemicalHandlerFacade(IChemicalHandler handler, boolean extractabl
             return 0;
         }
 
-        var inserted = amount - handler
-                .insertChemical(key.withAmount(amount), Action.fromFluidAction(mode.getFluidAction())).getAmount();
+        var inserted = ChemicalTransfer.insert(handler,key,amount,mode);
 
         if (inserted > 0 && mode == Actionable.MODULATE) {
             this.changeListener.run();
@@ -44,8 +45,7 @@ public record ChemicalHandlerFacade(IChemicalHandler handler, boolean extractabl
             return 0;
         }
 
-        var extracted = handler.extractChemical(key.withAmount(amount), Action.fromFluidAction(mode.getFluidAction()))
-                .getAmount();
+        var extracted = ChemicalTransfer.extract(handler,key,amount,mode);
 
         if (extracted > 0 && mode == Actionable.MODULATE) {
             this.changeListener.run();
@@ -61,8 +61,8 @@ public record ChemicalHandlerFacade(IChemicalHandler handler, boolean extractabl
 
     @Override
     public void getAvailableStacks(KeyCounter out) {
-        for (var i = 0; i < handler.getChemicalTanks(); i++) {
-            var stack = handler.getChemicalInTank(i);
+        for (var i = 0; i < handler.size(); i++) {
+            var stack = handler.getResource(i).toStack(1);
             var key = MekanismKey.of(stack);
 
             if (key == null) {
@@ -70,11 +70,11 @@ public record ChemicalHandlerFacade(IChemicalHandler handler, boolean extractabl
             }
 
             // Skip resources that cannot be extracted if that filter was enabled
-            if (extractableOnly && handler.extractChemical(stack, Action.SIMULATE).isEmpty()) {
+            if (extractableOnly && ChemicalTransfer.extract(handler,key,1,Actionable.SIMULATE)==0) {
                 continue;
             }
 
-            out.add(key, Math.min(stack.getAmount(), MAX_REPORTED_AMOUNT));
+            out.add(key, Math.min(handler.getAmountAsLong(i), MAX_REPORTED_AMOUNT));
         }
     }
 }

@@ -1,7 +1,7 @@
 package me.ramidzkh.mekae2.data;
 
 import net.minecraft.data.PackOutput;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.registries.DeferredItem;
 
@@ -12,12 +12,12 @@ import appeng.core.AppEng;
 
 public class ItemModelProvider extends net.neoforged.neoforge.client.model.generators.ItemModelProvider {
 
-    private static final ResourceLocation P2P_TUNNEL_BASE_ITEM = AppEng.makeId("item/p2p_tunnel_base");
-    private static final ResourceLocation P2P_TUNNEL_BASE_PART = AppEng.makeId("part/p2p/p2p_tunnel_base");
-    private static final ResourceLocation STORAGE_CELL_LED = AppEng.makeId("item/storage_cell_led");
-    private static final ResourceLocation PORTABLE_CELL_LED = AppEng.makeId("item/portable_cell_led");
-    private static final ResourceLocation PORTABLE_CELL_FIELD = AppEng.makeId("item/portable_cell_screen");
-    private static final ResourceLocation P2P_TUNNEL = AppliedMekanistics.id("part/p2p_tunnel_chemical");
+    private static final Identifier P2P_TUNNEL_BASE_ITEM = AppEng.makeId("item/p2p_tunnel_base");
+    private static final Identifier P2P_TUNNEL_BASE_PART = AppEng.makeId("part/p2p/p2p_tunnel_base");
+    private static final Identifier STORAGE_CELL_LED = AppEng.makeId("item/storage_cell_led");
+    private static final Identifier PORTABLE_CELL_LED = AppEng.makeId("item/portable_cell_led");
+    private static final Identifier PORTABLE_CELL_FIELD = AppEng.makeId("item/portable_cell_screen");
+    private static final Identifier P2P_TUNNEL = AppliedMekanistics.id("part/p2p_tunnel_chemical");
 
     public ItemModelProvider(PackOutput output, ExistingFileHelper existingFileHelper) {
         super(output, AppliedMekanistics.ID, existingFileHelper);

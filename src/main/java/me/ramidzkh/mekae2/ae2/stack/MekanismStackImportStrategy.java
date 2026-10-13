@@ -9,7 +9,9 @@ import me.ramidzkh.mekae2.MekCapabilities;
 import me.ramidzkh.mekae2.ae2.MekanismKey;
 import me.ramidzkh.mekae2.ae2.MekanismKeyType;
 import mekanism.api.Action;
-import mekanism.api.chemical.IChemicalHandler;
+import mekanism.api.chemical.ChemicalResource;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import me.ramidzkh.mekae2.ae2.ChemicalTransfer;
 
 import appeng.api.behaviors.StackImportStrategy;
 import appeng.api.behaviors.StackTransferContext;
@@ -18,7 +20,7 @@ import appeng.core.AELog;
 
 public class MekanismStackImportStrategy implements StackImportStrategy {
 
-    private final BlockCapabilityCache<IChemicalHandler, Direction> cache;
+    private final BlockCapabilityCache<ResourceHandler<ChemicalResource>, Direction> cache;
 
     public MekanismStackImportStrategy(ServerLevel level, BlockPos fromPos, Direction fromSide) {
         this.cache = BlockCapabilityCache.create(MekCapabilities.CHEMICAL.block(), level, fromPos, fromSide);
@@ -42,8 +44,8 @@ public class MekanismStackImportStrategy implements StackImportStrategy {
         var inv = context.getInternalStorage();
 
         // Try to find an extractable resource that fits our filter
-        for (var i = 0; i < handler.getChemicalTanks() && remainingTransferAmount > 0; i++) {
-            var stack = handler.getChemicalInTank(i);
+        for (var i = 0; i < handler.size() && remainingTransferAmount > 0; i++) {
+            var stack = handler.getResource(i).toStack(1);
             var resource = MekanismKey.of(stack);
 
             if (resource == null
@@ -59,8 +61,7 @@ public class MekanismStackImportStrategy implements StackImportStrategy {
                     context.getActionSource());
 
             // Try to simulate-extract it
-            var amount = handler.extractChemical(resource.withAmount(amountForThisResource), Action.EXECUTE)
-                    .getAmount();
+            var amount = ChemicalTransfer.extract(handler,resource,amountForThisResource,Actionable.MODULATE);
 
             if (amount > 0) {
                 var inserted = inv.getInventory().insert(resource, amount, Actionable.MODULATE,
@@ -69,8 +70,7 @@ public class MekanismStackImportStrategy implements StackImportStrategy {
                 if (inserted < amount) {
                     // Be nice and try to give the overflow back
                     var leftover = amount - inserted;
-                    leftover = handler
-                            .insertChemical(resource.withAmount(leftover), Action.EXECUTE).getAmount();
+                    leftover -= ChemicalTransfer.insert(handler,resource,leftover,Actionable.MODULATE);
 
                     if (leftover > 0) {
                         AELog.warn("Extracted %dx%s from adjacent storage and voided it because network refused insert",

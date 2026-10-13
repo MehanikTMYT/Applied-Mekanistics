@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "QRQ",
+    "R R",
+    "OOO"
+  ],
+  "key": {
+    "Q": "ae2:quartz_glass",
+    "R": "#c:dusts/redstone",
+    "O": "#c:ingots/osmium"
+  },
+  "result": {
+    "id": "appmek:chemical_cell_housing"
+  }
+}

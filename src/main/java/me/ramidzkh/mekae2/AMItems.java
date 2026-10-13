@@ -1,6 +1,6 @@
 package me.ramidzkh.mekae2;
 
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
@@ -14,13 +14,13 @@ import me.ramidzkh.mekae2.ae2.ChemicalP2PTunnelPart;
 import me.ramidzkh.mekae2.item.ChemicalPortableCellItem;
 import me.ramidzkh.mekae2.item.ChemicalStorageCell;
 
-import appeng.api.parts.PartModels;
+
 import appeng.block.AEBaseBlock;
 import appeng.block.AEBaseBlockItem;
 import appeng.items.AEBaseItem;
 import appeng.items.materials.MaterialItem;
 import appeng.items.parts.PartItem;
-import appeng.items.parts.PartModelsHelper;
+
 import appeng.items.storage.StorageTier;
 
 public class AMItems {
@@ -34,8 +34,8 @@ public class AMItems {
         ITEMS.register(bus);
     }
 
-    private static Item basic() {
-        return new MaterialItem(properties());
+    private static Item basic(Item.Properties props) {
+        return new MaterialItem(props);
     }
 
     private static Item.Properties properties() {
@@ -63,45 +63,45 @@ public class AMItems {
                     })
                     .build());
 
-    public static final DeferredItem<Item> CHEMICAL_CELL_HOUSING = ITEMS.register("chemical_cell_housing",
+    public static final DeferredItem<Item> CHEMICAL_CELL_HOUSING = ITEMS.registerItem("chemical_cell_housing",
             AMItems::basic);
 
-    public static final DeferredItem<Item> CHEMICAL_CELL_1K = ITEMS.register("chemical_storage_cell_1k",
-            () -> new ChemicalStorageCell(properties().stacksTo(1), StorageTier.SIZE_1K));
-    public static final DeferredItem<Item> CHEMICAL_CELL_4K = ITEMS.register("chemical_storage_cell_4k",
-            () -> new ChemicalStorageCell(properties().stacksTo(1), StorageTier.SIZE_4K));
-    public static final DeferredItem<Item> CHEMICAL_CELL_16K = ITEMS.register("chemical_storage_cell_16k",
-            () -> new ChemicalStorageCell(properties().stacksTo(1), StorageTier.SIZE_16K));
-    public static final DeferredItem<Item> CHEMICAL_CELL_64K = ITEMS.register("chemical_storage_cell_64k",
-            () -> new ChemicalStorageCell(properties().stacksTo(1), StorageTier.SIZE_64K));
-    public static final DeferredItem<Item> CHEMICAL_CELL_256K = ITEMS.register("chemical_storage_cell_256k",
-            () -> new ChemicalStorageCell(properties().stacksTo(1), StorageTier.SIZE_256K));
+    public static final DeferredItem<Item> CHEMICAL_CELL_1K = ITEMS.registerItem("chemical_storage_cell_1k",
+            props -> new ChemicalStorageCell(props.stacksTo(1), StorageTier.SIZE_1K));
+    public static final DeferredItem<Item> CHEMICAL_CELL_4K = ITEMS.registerItem("chemical_storage_cell_4k",
+            props -> new ChemicalStorageCell(props.stacksTo(1), StorageTier.SIZE_4K));
+    public static final DeferredItem<Item> CHEMICAL_CELL_16K = ITEMS.registerItem("chemical_storage_cell_16k",
+            props -> new ChemicalStorageCell(props.stacksTo(1), StorageTier.SIZE_16K));
+    public static final DeferredItem<Item> CHEMICAL_CELL_64K = ITEMS.registerItem("chemical_storage_cell_64k",
+            props -> new ChemicalStorageCell(props.stacksTo(1), StorageTier.SIZE_64K));
+    public static final DeferredItem<Item> CHEMICAL_CELL_256K = ITEMS.registerItem("chemical_storage_cell_256k",
+            props -> new ChemicalStorageCell(props.stacksTo(1), StorageTier.SIZE_256K));
 
-    public static final DeferredItem<Item> PORTABLE_CHEMICAL_CELL_1K = ITEMS.register(
+    public static final DeferredItem<Item> PORTABLE_CHEMICAL_CELL_1K = ITEMS.registerItem(
             "portable_chemical_cell_1k",
-            () -> new ChemicalPortableCellItem(18, AMMenus.PORTABLE_CHEMICAL_CELL_TYPE, StorageTier.SIZE_1K,
-                    properties().stacksTo(1), 0x80caff));
-    public static final DeferredItem<Item> PORTABLE_CHEMICAL_CELL_4K = ITEMS.register(
+            props -> new ChemicalPortableCellItem(18, AMMenus.PORTABLE_CHEMICAL_CELL_TYPE, StorageTier.SIZE_1K,
+                    props.stacksTo(1), 0x80caff));
+    public static final DeferredItem<Item> PORTABLE_CHEMICAL_CELL_4K = ITEMS.registerItem(
             "portable_chemical_cell_4k",
-            () -> new ChemicalPortableCellItem(18, AMMenus.PORTABLE_CHEMICAL_CELL_TYPE, StorageTier.SIZE_4K,
-                    properties().stacksTo(1), 0x80caff));
-    public static final DeferredItem<Item> PORTABLE_CHEMICAL_CELL_16K = ITEMS.register(
+            props -> new ChemicalPortableCellItem(18, AMMenus.PORTABLE_CHEMICAL_CELL_TYPE, StorageTier.SIZE_4K,
+                    props.stacksTo(1), 0x80caff));
+    public static final DeferredItem<Item> PORTABLE_CHEMICAL_CELL_16K = ITEMS.registerItem(
             "portable_chemical_cell_16k",
-            () -> new ChemicalPortableCellItem(18, AMMenus.PORTABLE_CHEMICAL_CELL_TYPE, StorageTier.SIZE_16K,
-                    properties().stacksTo(1), 0x80caff));
-    public static final DeferredItem<Item> PORTABLE_CHEMICAL_CELL_64K = ITEMS.register(
+            props -> new ChemicalPortableCellItem(18, AMMenus.PORTABLE_CHEMICAL_CELL_TYPE, StorageTier.SIZE_16K,
+                    props.stacksTo(1), 0x80caff));
+    public static final DeferredItem<Item> PORTABLE_CHEMICAL_CELL_64K = ITEMS.registerItem(
             "portable_chemical_cell_64k",
-            () -> new ChemicalPortableCellItem(18, AMMenus.PORTABLE_CHEMICAL_CELL_TYPE, StorageTier.SIZE_64K,
-                    properties().stacksTo(1), 0x80caff));
-    public static final DeferredItem<Item> PORTABLE_CHEMICAL_CELL_256K = ITEMS.register(
+            props -> new ChemicalPortableCellItem(18, AMMenus.PORTABLE_CHEMICAL_CELL_TYPE, StorageTier.SIZE_64K,
+                    props.stacksTo(1), 0x80caff));
+    public static final DeferredItem<Item> PORTABLE_CHEMICAL_CELL_256K = ITEMS.registerItem(
             "portable_chemical_cell_256k",
-            () -> new ChemicalPortableCellItem(18, AMMenus.PORTABLE_CHEMICAL_CELL_TYPE, StorageTier.SIZE_256K,
-                    properties().stacksTo(1), 0x80caff));
+            props -> new ChemicalPortableCellItem(18, AMMenus.PORTABLE_CHEMICAL_CELL_TYPE, StorageTier.SIZE_256K,
+                    props.stacksTo(1), 0x80caff));
 
     public static final DeferredItem<PartItem<ChemicalP2PTunnelPart>> CHEMICAL_P2P_TUNNEL = Util.make(() -> {
-        PartModels.registerModels(PartModelsHelper.createModels(ChemicalP2PTunnelPart.class));
-        return ITEMS.register("chemical_p2p_tunnel",
-                () -> new PartItem<>(properties(), ChemicalP2PTunnelPart.class, ChemicalP2PTunnelPart::new));
+
+        return ITEMS.registerItem("chemical_p2p_tunnel",
+                props -> new PartItem<>(props, ChemicalP2PTunnelPart.class, ChemicalP2PTunnelPart::new));
     });
 
     public static DeferredItem<Item> get(Tier tier) {
@@ -132,3 +132,4 @@ public class AMItems {
         _256K
     }
 }
+

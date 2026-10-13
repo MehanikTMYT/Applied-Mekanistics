@@ -1,80 +1,15 @@
 package me.ramidzkh.mekae2.ae2;
-
-import mekanism.api.Action;
-import mekanism.api.chemical.ChemicalStack;
-import mekanism.api.chemical.IChemicalHandler;
-
 import appeng.api.behaviors.GenericInternalInventory;
 import appeng.api.config.Actionable;
-
-public class GenericStackChemicalStorage implements IChemicalHandler {
-
-    private final GenericInternalInventory inv;
-
-    public GenericStackChemicalStorage(GenericInternalInventory inv) {
-        this.inv = inv;
-    }
-
-    @Override
-    public int getChemicalTanks() {
-        return inv.size();
-    }
-
-    @Override
-    public ChemicalStack getChemicalInTank(int tank) {
-        if (inv.getKey(tank) instanceof MekanismKey what) {
-            return what.withAmount(inv.getAmount(tank));
-        }
-
-        return ChemicalStack.EMPTY;
-    }
-
-    @Override
-    public void setChemicalInTank(int tank, ChemicalStack stack) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public long getChemicalTankCapacity(int tank) {
-        return inv.getCapacity(MekanismKeyType.TYPE);
-    }
-
-    @Override
-    public boolean isValid(int tank, ChemicalStack stack) {
-        var what = MekanismKey.of(stack);
-        return what == null || inv.isAllowedIn(tank, what);
-    }
-
-    @Override
-    public ChemicalStack insertChemical(int tank, ChemicalStack stack, Action action) {
-        var what = MekanismKey.of(stack);
-
-        if (what == null) {
-            return stack;
-        }
-
-        var remainder = stack.getAmount()
-                - inv.insert(tank, what, stack.getAmount(), Actionable.of(action.toFluidAction()));
-
-        if (remainder == 0) {
-            return ChemicalStack.EMPTY;
-        }
-
-        return stack.copyWithAmount(remainder);
-    }
-
-    @Override
-    public ChemicalStack extractChemical(int tank, long amount, Action action) {
-        if (!(inv.getKey(tank) instanceof MekanismKey what)) {
-            return ChemicalStack.EMPTY;
-        }
-
-        var extracted = inv.extract(tank, what, amount, Actionable.of(action.toFluidAction()));
-
-        if (extracted == 0) {
-            return ChemicalStack.EMPTY;
-        }
-
-        return what.withAmount(extracted);
-    }
+import mekanism.api.chemical.ChemicalResource;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
+public record GenericStackChemicalStorage(GenericInternalInventory inv) implements ResourceHandler<ChemicalResource> {
+ public int size(){return inv.size();}
+ public ChemicalResource getResource(int slot){return inv.getKey(slot) instanceof MekanismKey k?ChemicalResource.of(k.getStack()):ChemicalResource.EMPTY;}
+ public long getAmountAsLong(int slot){return inv.getAmount(slot);}
+ public long getCapacityAsLong(int slot,ChemicalResource resource){return inv.getCapacity(MekanismKeyType.TYPE);}
+ public boolean isValid(int slot,ChemicalResource r){return !r.isEmpty() && inv.isAllowedIn(slot,MekanismKey.of(r.toStack(1)));}
+ public int insert(int slot,ChemicalResource r,int amount,TransactionContext tx){if(r.isEmpty()||amount<=0)return 0;inv.updateSnapshots(tx);return (int)inv.insert(slot,MekanismKey.of(r.toStack(1)),amount,Actionable.MODULATE);}
+ public int extract(int slot,ChemicalResource r,int amount,TransactionContext tx){if(r.isEmpty()||amount<=0||!r.equals(getResource(slot)))return 0;inv.updateSnapshots(tx);return (int)inv.extract(slot,MekanismKey.of(r.toStack(1)),amount,Actionable.MODULATE);}
 }

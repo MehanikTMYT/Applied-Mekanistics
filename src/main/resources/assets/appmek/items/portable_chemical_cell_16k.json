@@ -1,0 +1,22 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "appmek:item/portable_chemical_cell_16k",
+    "tints": [
+      {
+        "type": "minecraft:constant",
+        "value": -1
+      },
+      {
+        "type": "ae2:storage_cell_state"
+      },
+      {
+        "type": "ae2:portable_cell_color"
+      },
+      {
+        "type": "minecraft:constant",
+        "value": -1
+      }
+    ]
+  }
+}

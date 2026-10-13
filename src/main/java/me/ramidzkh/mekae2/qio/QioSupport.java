@@ -1,7 +1,7 @@
 package me.ramidzkh.mekae2.qio;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
@@ -46,6 +46,6 @@ public class QioSupport {
 
             return null;
         }, BuiltInRegistries.BLOCK
-                .get(ResourceLocation.fromNamespaceAndPath(MekanismAPI.MEKANISM_MODID, "qio_dashboard")));
+                .getValue(Identifier.fromNamespaceAndPath(MekanismAPI.MEKANISM_MODID, "qio_dashboard")));
     }
 }

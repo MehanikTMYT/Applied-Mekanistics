@@ -1,6 +1,6 @@
 package me.ramidzkh.mekae2.integration.jade;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import mekanism.api.MekanismAPI;
 import snownee.jade.api.BlockAccessor;
@@ -16,7 +16,7 @@ import appeng.api.AECapabilities;
 @WailaPlugin
 public class AMJadePlugin implements IWailaPlugin {
 
-    private static final ResourceLocation CHEMICAL = ResourceLocation.fromNamespaceAndPath(MekanismAPI.MEKANISM_MODID,
+    private static final Identifier CHEMICAL = Identifier.fromNamespaceAndPath(MekanismAPI.MEKANISM_MODID,
             "chemical");
 
     @Override

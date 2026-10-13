@@ -1,225 +1,44 @@
-plugins {
-    id("net.neoforged.moddev") version "2.0.78"
-    id("com.matthewprenger.cursegradle") version "1.4.0"
-    id("com.diffplug.spotless") version "7.0.3"
-    id("com.modrinth.minotaur") version "2.8.7"
-}
-
-group = "me.ramidzkh"
-version = System.getenv("APPMEK_VERSION") ?: "1.6.0"
-
-repositories {
-    maven {
-        name = "Modmaven"
-        url = uri("https://modmaven.dev/")
-
-        content {
-            includeGroup("appeng")
-            includeGroup("mekanism")
-        }
-    }
-
-    maven {
-        name = "CurseForge"
-        url = uri("https://www.cursemaven.com")
-
-        content {
-            includeGroup("curse.maven")
-        }
-    }
-
-    maven {
-        name = "TerraformersMC"
-        url = uri("https://maven.terraformersmc.com/")
-
-        content {
-            includeGroup("dev.emi")
-        }
-    }
-
-    maven {
-        name = "Jared maven"
-        url = uri("https://maven.blamejared.com")
-
-        content {
-            includeGroup("mezz.jei")
-        }
-    }
-
-    maven {
-        name = "Local"
-        url = file("libs").toURI()
-    }
-
-    mavenLocal()
-}
-
+plugins { id 'java-library'; id 'net.neoforged.moddev' version '2.0.146' }
+version = '1.6.0-port1'
+group = 'me.ramidzkh'
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+neoForge { version = '26.1.2.109'; mods { appmek { sourceSet sourceSets.main } }; runs { client { client() }; server { server(); programArgument '--nogui' } } }
+repositories { mavenCentral() }
 dependencies {
-    // We depend on many AE2 internals, such as using their basic cell drive, thus not using classifier = "api"
-    implementation("org.appliedenergistics:appliedenergistics2:${ae2_version}")
+ implementation files('libs/appliedenergistics2-26.1.12-beta.jar')
+ runtimeOnly files('libs/guideme-26.1.12-beta.jar')
+ implementation files('libs/Mekanism-Version-Locked-26.1.2-2.7.jar')
+ compileOnly files('libs/jei-26.1.2-neoforge-29.37.0.99.jar')
+ compileOnly files('libs/Jade-mc26.1-NeoForge-26.1.11.jar')
+ compileOnly 'org.jetbrains:annotations:26.0.1'
+}
+sourceSets.main.resources.srcDir 'src/generated/resources'
+sourceSets.main.java { exclude 'me/ramidzkh/mekae2/data/**'; exclude 'me/ramidzkh/mekae2/integration/emi/**' }
+tasks.withType(JavaCompile).configureEach { options.encoding='UTF-8'; options.compilerArgs += ['-Xmaxerrs','1000'] }
+tasks.named('processResources') { filesMatching('META-INF/neoforge.mods.toml') { expand(version: '1.6.0-port1',loader_version_range:'[4,)',neo_version_range:'[26.1.2.109,)',ae2_version_range:'[26.1.12-beta,27)',mekanism_version_range:'[10.8.0,11)') } }
+tasks.named('jar') { archiveFileName='Applied-Mekanistics-Version-Locked-26.1.2-1.6.0-port1.jar'; from('LICENSE') { into 'META-INF' }
+ from('THIRD-PARTY-NOTICES.md') { into 'META-INF' } }
 
-    compileOnly("mekanism:Mekanism:${minecraft_version}-${mekanism_version}:api")
-    runtimeOnly("mekanism:Mekanism:${minecraft_version}-${mekanism_version}:all")
-
-    if (project.runtime_itemlist_mod == "emi") {
-        implementation("dev.emi:emi-neoforge:${project.emi_version}")
-        compileOnly("mezz.jei:jei-${project.minecraft_version}-neoforge:${project.jei_version}")
-        compileOnly("curse.maven:ae2-jei-integration-1074338:${jei_ae2_integration_id}")
-    } else if (project.runtime_itemlist_mod == "jei") {
-        compileOnly("dev.emi:emi-neoforge:${project.emi_version}")
-        implementation("mezz.jei:jei-${project.minecraft_version}-neoforge:${project.jei_version}")
-        implementation("curse.maven:ae2-jei-integration-1074338:${jei_ae2_integration_id}")
-    } else {
-        throw new GradleException("Invalid runtime_itemlist_mod value: " + project.runtime_itemlist_mod)
-    }
-
-    compileOnly("curse.maven:jade-324717:${jade_id}")
+if(providers.gradleProperty('portSmoke').isPresent()) {
+ dependencies { runtimeOnly files('libs/mekanism_extras-26.1.2-1.4.2-fix5-atm11-0.9.0.jar','libs/MekanismGenerators-Version-Locked-26.1.2-1.3.jar','libs/mekmm-26.1.2-2.0.0-port8-atm11-0.9.0.jar') }
+ sourceSets.test.compileClasspath += sourceSets.main.compileClasspath
+ neoForge.addModdingDependenciesTo(sourceSets.test)
+ neoForge.mods.appmek.sourceSet sourceSets.test
+ neoForge.runs.server.systemProperty 'appmek.smoke','true'
 }
 
-sourceSets {
-    main {
-        resources {
-            srcDir("src/generated/resources")
-        }
-    }
+if(providers.gradleProperty('clientSmoke').isPresent()) {
+ dependencies { runtimeOnly files('libs/jei-26.1.2-neoforge-29.37.0.99.jar') }
+ neoForge.runs.client.systemProperty 'appmek.clientSmoke','true'
+ neoForge.runs.client.programArguments.addAll('--quickPlaySingleplayer','appmek-test')
 }
+tasks.named('downloadAssets') { javaExecutable.set(javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }.map { it.executablePath.asFile.absolutePath }) }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-////////////////////
-// Minecraft
-neoForge {
-    version = neoforge_version
-
-    runs {
-        client { client() }
-        server { server() }
-
-        data {
-            data()
-            programArguments.addAll(
-                    "--mod", "appmek",
-                    "--all",
-                    "--output", file("src/generated/resources/").getAbsolutePath(),
-                    "--existing", file("src/main/resources/").getAbsolutePath())
-        }
-    }
-
-    mods {
-        appmek {
-            sourceSet sourceSets.main
-        }
-    }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = "UTF-8"
-}
-
-// This block of code expands all declared replace properties in the specified resource targets.
-// A missing property will result in an error. Properties are expanded using ${} Groovy notation.
-// When "copyIdeResources" is enabled, this will also run before the game launches in IDE environments.
-// See https://docs.gradle.org/current/dsl/org.gradle.language.jvm.tasks.ProcessResources.html
-tasks.withType(ProcessResources).configureEach {
-    var replaceProperties = [
-            version: version,
-            loader_version_range: loader_version_range,
-            neo_version_range: neo_version_range,
-            ae2_version_range: ae2_version_range,
-            mekanism_version_range: mekanism_version_range,
-    ]
-    inputs.properties(replaceProperties)
-
-    filesMatching(["META-INF/neoforge.mods.toml"]) {
-        expand replaceProperties
-    }
-}
-
-/////////////
-// Spotless
-spotless {
-    java {
-        target("src/main/java/**/*.java")
-
-        endWithNewline()
-        leadingTabsToSpaces()
-        removeUnusedImports()
-        toggleOffOn()
-        eclipse().configFile("codeformat/codeformat.xml")
-        importOrderFile("codeformat/ae2.importorder")
-    }
-
-    format("json") {
-        target("src/*/resources/**/*.json")
-        targetExclude("src/generated/resources/**")
-        prettier().config(parser: "json")
-    }
-}
-
-////////////////
-// CurseForge
-System.getenv("CURSEFORGE")?.with { String key ->
-    curseforge {
-        apiKey = key
-
-        project {
-            id = "574300"
-            changelogType = "markdown"
-            changelog = "View changelog at [the release page](https://github.com/AppliedEnergistics/Applied-Mekanistics/releases/tag/${version})"
-
-            if (version.contains("alpha")) {
-                releaseType = "alpha"
-            } else if (version.contains("beta")) {
-                releaseType = "beta"
-            } else {
-                releaseType = "release"
-            }
-
-            addGameVersion("${minecraft_version}")
-            addGameVersion("NeoForge")
-
-            mainArtifact(jar) {
-                displayName = "${project.version}"
-
-                relations {
-                    requiredDependency("applied-energistics-2")
-                    requiredDependency("mekanism")
-                }
-            }
-        }
-    }
-}
-
-////////////////
-// Modrinth
-modrinth {
-    token.set(System.getenv("MODRINTH"))
-    projectId.set("applied-mekanistics")
-    changelog.set("View changelog at [the release page](https://github.com/AppliedEnergistics/Applied-Mekanistics/releases/tag/${version})")
-    versionNumber.set(project.version)
-
-    if (version.contains("alpha")) {
-        versionType.set("alpha")
-    } else if (version.contains("beta")) {
-        versionType.set("beta")
-    } else {
-        versionType.set("release")
-    }
-
-    uploadFile.set(jar)
-    gameVersions.add(minecraft_version)
-    loaders.add("neoforge")
-
-    dependencies {
-        required.project("ae2")
-        required.project("mekanism")
-    }
-}
-
-tasks.modrinth.onlyIf {
-    System.getenv("MODRINTH")
+tasks.register('portSources', Jar) {
+ archiveFileName='Applied-Mekanistics-Version-Locked-26.1.2-1.6.0-port1-sources.jar'
+ destinationDirectory=layout.buildDirectory.dir('libs')
+ from('src/main/java')
+ from('src/main/resources')
+ from('LICENSE') { into 'META-INF' }
+ from('THIRD-PARTY-NOTICES.md') { into 'META-INF' }
 }

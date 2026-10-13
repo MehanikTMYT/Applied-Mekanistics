@@ -9,7 +9,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 
@@ -31,7 +31,7 @@ public class ItemTagsProvider extends net.minecraft.data.tags.ItemTagsProvider {
         var tanks = tag(P2PTunnelAttunement.getAttunementTag(AMItems.CHEMICAL_P2P_TUNNEL::get));
 
         for (var tier : List.of("basic", "advanced", "elite", "ultimate", "creative")) {
-            var tank = ResourceLocation.fromNamespaceAndPath("mekanism", tier + "_chemical_tank");
+            var tank = Identifier.fromNamespaceAndPath("mekanism", tier + "_chemical_tank");
             tanks.add(ResourceKey.create(Registries.ITEM, tank));
         }
     }

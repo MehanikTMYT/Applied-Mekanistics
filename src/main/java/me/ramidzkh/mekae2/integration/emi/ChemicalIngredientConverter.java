@@ -34,7 +34,7 @@ public final class ChemicalIngredientConverter implements EmiStackConverter {
             var what = MekanismKey.of(chemical);
 
             if (what != null) {
-                return new GenericStack(what, stack.getAmount());
+                return new GenericStack(what, stack.amount());
             }
         }
 

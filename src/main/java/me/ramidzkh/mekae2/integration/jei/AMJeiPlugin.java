@@ -1,6 +1,6 @@
 package me.ramidzkh.mekae2.integration.jei;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.LoadingModList;
 import net.neoforged.fml.loading.moddiscovery.ModInfo;
@@ -11,13 +11,15 @@ import mezz.jei.api.JeiPlugin;
 
 @JeiPlugin
 public class AMJeiPlugin implements IModPlugin {
+    public static mezz.jei.api.runtime.IJeiRuntime runtime;
+    @Override public void onRuntimeAvailable(mezz.jei.api.runtime.IJeiRuntime value){runtime=value;}
     @Override
-    public ResourceLocation getPluginUid() {
-        return ResourceLocation.fromNamespaceAndPath(AppliedMekanistics.ID, "jei_plugin");
+    public Identifier getPluginUid() {
+        return Identifier.fromNamespaceAndPath(AppliedMekanistics.ID, "jei_plugin");
     }
 
     public AMJeiPlugin() {
-        if (isModLoaded("ae2jeiintegration")) {
+        if (isModLoaded("ae2")) {
             AE2JeiIntegrationHelper.register();
         }
     }

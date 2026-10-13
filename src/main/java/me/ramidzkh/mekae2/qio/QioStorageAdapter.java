@@ -13,7 +13,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
 import me.ramidzkh.mekae2.AMText;
 import mekanism.api.Action;
-import mekanism.api.inventory.IHashedItem;
+import net.neoforged.neoforge.transfer.item.ItemResource;
 import mekanism.api.inventory.qio.IQIOComponent;
 import mekanism.api.inventory.qio.IQIOFrequency;
 import mekanism.api.security.ISecurityObject;
@@ -33,7 +33,7 @@ import appeng.api.storage.MEStorage;
  */
 public class QioStorageAdapter<DASHBOARD extends BlockEntity & IQIOComponent & ISecurityObject> implements MEStorage {
 
-    private static final Map<IHashedItem, AEItemKey> CACHE = new WeakHashMap<>();
+    private static final Map<ItemResource, AEItemKey> CACHE = new WeakHashMap<>();
 
     private final DASHBOARD dashboard;
     private final @Nullable Direction queriedSide;
@@ -82,7 +82,7 @@ public class QioStorageAdapter<DASHBOARD extends BlockEntity & IQIOComponent & I
                 return 0;
             }
 
-            return freq.massInsert(itemKey.toStack(), amount, Action.fromFluidAction(mode.getFluidAction()));
+            try (var tx = net.neoforged.neoforge.transfer.transaction.Transaction.openRoot()) { long moved=freq.massInsert(ItemResource.of(itemKey.toStack()), amount, tx); if(mode==Actionable.MODULATE)tx.commit(); return moved; }
         }
 
         return 0;
@@ -97,7 +97,7 @@ public class QioStorageAdapter<DASHBOARD extends BlockEntity & IQIOComponent & I
                 return 0;
             }
 
-            return freq.massExtract(itemKey.toStack(), amount, Action.fromFluidAction(mode.getFluidAction()));
+            try (var tx = net.neoforged.neoforge.transfer.transaction.Transaction.openRoot()) { long moved=freq.massExtract(ItemResource.of(itemKey.toStack()), amount, tx); if(mode==Actionable.MODULATE)tx.commit(); return moved; }
         }
 
         return 0;
@@ -111,9 +111,9 @@ public class QioStorageAdapter<DASHBOARD extends BlockEntity & IQIOComponent & I
             return;
         }
 
-        freq.forAllHashedStored((type, count) -> {
+        freq.forAllStoredTypes((type, count) -> {
             // noinspection ConstantConditions
-            out.add(CACHE.computeIfAbsent(type, it -> AEItemKey.of(it.getInternalStack())), count);
+            out.add(CACHE.computeIfAbsent(type, it -> AEItemKey.of(it.toStack(1))), count);
         });
     }
 

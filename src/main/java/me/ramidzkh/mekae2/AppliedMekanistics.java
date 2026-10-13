@@ -5,7 +5,7 @@ import java.util.function.Function;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.EventPriority;
@@ -21,7 +21,7 @@ import me.ramidzkh.mekae2.ae2.*;
 import me.ramidzkh.mekae2.ae2.stack.MekanismExternalStorageStrategy;
 import me.ramidzkh.mekae2.ae2.stack.MekanismStackExportStrategy;
 import me.ramidzkh.mekae2.ae2.stack.MekanismStackImportStrategy;
-import me.ramidzkh.mekae2.data.MekAE2DataGenerators;
+
 import me.ramidzkh.mekae2.qio.QioSupport;
 
 import appeng.api.AECapabilities;
@@ -43,15 +43,15 @@ public class AppliedMekanistics {
 
     public static final String ID = "appmek";
 
-    public static ResourceLocation id(String path) {
-        return ResourceLocation.fromNamespaceAndPath(ID, path);
+    public static Identifier id(String path) {
+        return Identifier.fromNamespaceAndPath(ID, path);
     }
 
     public AppliedMekanistics(IEventBus bus) {
         AMItems.initialize(bus);
         AMMenus.initialize(bus);
 
-        bus.addListener(MekAE2DataGenerators::onGatherData);
+
 
         bus.addListener((RegisterEvent event) -> {
             if (!event.getRegistryKey().equals(Registries.BLOCK)) {
@@ -74,12 +74,12 @@ public class AppliedMekanistics {
         bus.addListener(this::registerPartCapabilities);
 
         bus.addListener((FMLCommonSetupEvent event) -> {
-            event.enqueueWork(this::initializeModels);
+
             event.enqueueWork(this::initializeUpgrades);
             event.enqueueWork(this::initializeAttunement);
         });
 
-        if (FMLEnvironment.dist == Dist.CLIENT) {
+        if (FMLEnvironment.getDist() == Dist.CLIENT) {
             AppliedMekanisticsClient.initialize(bus);
         }
     }
@@ -95,17 +95,6 @@ public class AppliedMekanistics {
                 registerGenericInvAdapter(event, block, MekCapabilities.CHEMICAL.block(),
                         GenericStackChemicalStorage::new);
             }
-        }
-    }
-
-    private void initializeModels() {
-        for (var tier : AMItems.Tier.values()) {
-            var cell = AMItems.get(tier);
-            var portable = AMItems.getPortableCell(tier);
-            var path = cell.getId().getPath();
-
-            StorageCellModels.registerModel(cell.get(), id("block/drive/cells/" + path));
-            StorageCellModels.registerModel(portable.get(), id("block/drive/cells/" + path));
         }
     }
 

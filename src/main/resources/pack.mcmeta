@@ -1,6 +1,7 @@
 {
   "pack": {
-    "description": "Resources for Applied Mekanistics",
-    "pack_format": 9
+    "description": "Applied Mekanistics Version Locked",
+    "min_format": 84,
+    "max_format": 84
   }
 }

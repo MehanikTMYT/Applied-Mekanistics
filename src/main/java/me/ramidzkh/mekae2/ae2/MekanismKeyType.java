@@ -51,8 +51,8 @@ public class MekanismKeyType extends AEKeyType {
     }
 
     @Override
-    public AEKey loadKeyFromTag(HolderLookup.Provider registries, CompoundTag tag) {
-        return MekanismKey.fromTag(registries, tag);
+    public AEKey loadKeyFromTag(net.minecraft.world.level.storage.ValueInput input) {
+        return MekanismKey.fromTag(input);
     }
 
     // Copied from AEFluidKey
@@ -63,7 +63,7 @@ public class MekanismKeyType extends AEKeyType {
 
     @Override
     public Stream<TagKey<?>> getTagNames() {
-        return MekanismAPI.CHEMICAL_REGISTRY.getTagNames().map(t -> t);
+        return MekanismAPI.CHEMICAL_REGISTRY.listTagIds().map(t -> t);
     }
 
     // Copied from AEFluidKey

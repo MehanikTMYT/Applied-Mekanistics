@@ -11,7 +11,9 @@ import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
 import me.ramidzkh.mekae2.MekCapabilities;
 import me.ramidzkh.mekae2.ae2.MekanismKey;
 import mekanism.api.Action;
-import mekanism.api.chemical.IChemicalHandler;
+import mekanism.api.chemical.ChemicalResource;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import me.ramidzkh.mekae2.ae2.ChemicalTransfer;
 
 import appeng.api.behaviors.StackExportStrategy;
 import appeng.api.behaviors.StackTransferContext;
@@ -22,7 +24,7 @@ import appeng.api.storage.StorageHelper;
 public class MekanismStackExportStrategy implements StackExportStrategy {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MekanismStackExportStrategy.class);
-    private final BlockCapabilityCache<IChemicalHandler, Direction> cache;
+    private final BlockCapabilityCache<ResourceHandler<ChemicalResource>, Direction> cache;
 
     public MekanismStackExportStrategy(ServerLevel level, BlockPos fromPos, Direction fromSide) {
         this.cache = BlockCapabilityCache.create(MekCapabilities.CHEMICAL.block(), level, fromPos, fromSide);
@@ -50,9 +52,7 @@ public class MekanismStackExportStrategy implements StackExportStrategy {
                 context.getActionSource(),
                 Actionable.SIMULATE);
 
-        var wasInserted = extracted
-                - storage.insertChemical(mekanismKey.withAmount(extracted),
-                        Action.SIMULATE).getAmount();
+        var wasInserted = ChemicalTransfer.insert(storage,mekanismKey,extracted,Actionable.SIMULATE);
 
         if (wasInserted > 0) {
             extracted = StorageHelper.poweredExtraction(
@@ -63,8 +63,7 @@ public class MekanismStackExportStrategy implements StackExportStrategy {
                     context.getActionSource(),
                     Actionable.MODULATE);
 
-            wasInserted = extracted
-                    - storage.insertChemical(mekanismKey.withAmount(extracted), Action.EXECUTE).getAmount();
+            wasInserted = ChemicalTransfer.insert(storage,mekanismKey,extracted,Actionable.MODULATE);
 
             if (wasInserted < extracted) {
                 // Be nice and try to give the overflow back
@@ -93,8 +92,6 @@ public class MekanismStackExportStrategy implements StackExportStrategy {
             return 0;
         }
 
-        return amount
-                - storage.insertChemical(mekanismKey.withAmount(amount), Action.fromFluidAction(mode.getFluidAction()))
-                        .getAmount();
+        return ChemicalTransfer.insert(storage,mekanismKey,amount,mode);
     }
 }

@@ -6,7 +6,7 @@ import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 
 import appeng.api.implementations.menuobjects.IPortableTerminal;
 import appeng.client.gui.me.common.MEStorageScreen;
-import appeng.init.client.InitScreens;
+import appeng.client.InitScreens;
 import appeng.menu.implementations.MenuTypeBuilder;
 import appeng.menu.me.common.MEStorageMenu;
 

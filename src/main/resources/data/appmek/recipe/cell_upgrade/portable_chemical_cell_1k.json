@@ -1,0 +1,18 @@
+{
+  "type": "ae2:storage_cell_disassembly",
+  "cell": "appmek:portable_chemical_cell_1k",
+  "cell_disassembly_items": [
+    {
+      "id": "ae2:me_chest"
+    },
+    {
+      "id": "ae2:energy_cell"
+    },
+    {
+      "id": "appmek:chemical_cell_housing"
+    },
+    {
+      "id": "ae2:cell_component_1k"
+    }
+  ]
+}

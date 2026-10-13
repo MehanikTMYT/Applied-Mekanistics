@@ -17,7 +17,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -33,7 +33,7 @@ import appeng.core.AELog;
 public class MekanismKey extends AEKey {
 
     public static final MapCodec<MekanismKey> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            Chemical.HOLDER_CODEC.fieldOf("id").forGetter(key -> key.getStack().getChemicalHolder()))
+            mekanism.api.MekanismAPI.CHEMICAL_REGISTRY.holderByNameCodec().fieldOf("id").forGetter(key -> key.getStack().typeHolder()))
             .apply(instance, chemical -> MekanismKey.of(new ChemicalStack(chemical, 1))));
     public static final Codec<MekanismKey> CODEC = MAP_CODEC.codec();
 
@@ -49,15 +49,15 @@ public class MekanismKey extends AEKey {
             return null;
         }
 
-        return new MekanismKey(stack.copy());
+        return new MekanismKey(stack.copyWithAmount(1));
     }
 
     public ChemicalStack getStack() {
-        return stack;
+        return stack.copy();
     }
 
     public ChemicalStack withAmount(long amount) {
-        return stack.copyWithAmount(amount);
+        return stack.copyWithAmount((int)Math.min(Integer.MAX_VALUE, Math.max(0,amount)));
     }
 
     @Override
@@ -71,21 +71,12 @@ public class MekanismKey extends AEKey {
     }
 
     @Nullable
-    public static MekanismKey fromTag(HolderLookup.Provider registries, CompoundTag tag) {
-        var ops = registries.createSerializationContext(NbtOps.INSTANCE);
-
-        try {
-            return CODEC.decode(ops, tag).getOrThrow().getFirst();
-        } catch (Exception e) {
-            AELog.debug("Tried to load an invalid chemical key from NBT: %s", tag, e);
-            return null;
-        }
+    public static MekanismKey fromTag(net.minecraft.world.level.storage.ValueInput input) {
+        return input.read(MAP_CODEC).orElse(null);
     }
-
     @Override
-    public CompoundTag toTag(HolderLookup.Provider registries) {
-        var ops = registries.createSerializationContext(NbtOps.INSTANCE);
-        return (CompoundTag) CODEC.encodeStart(ops, this).getOrThrow();
+    public void toTag(net.minecraft.world.level.storage.ValueOutput output) {
+        output.store(MAP_CODEC, this);
     }
 
     @Override
@@ -94,13 +85,13 @@ public class MekanismKey extends AEKey {
     }
 
     @Override
-    public ResourceLocation getId() {
-        return stack.getChemicalHolder().getKey().location();
+    public Identifier getId() {
+        return stack.typeHolder().getKey().identifier();
     }
 
     @Override
     public void addDrops(long amount, List<ItemStack> drops, Level level, BlockPos pos) {
-        IRadiationManager.INSTANCE.dumpRadiation(GlobalPos.of(level.dimension(), pos), withAmount(amount));
+        IRadiationManager.INSTANCE.dumpRadiation(level, pos, mekanism.api.chemical.ChemicalResource.of(stack), amount);
     }
 
     @Override
@@ -130,7 +121,7 @@ public class MekanismKey extends AEKey {
     }
 
     public static MekanismKey fromPacket(RegistryFriendlyByteBuf data) {
-        return new MekanismKey(ChemicalStack.STREAM_CODEC.decode(data));
+        return java.util.Objects.requireNonNull(of(ChemicalStack.STREAM_CODEC.decode(data)), "Empty chemical key");
     }
 
     @Override

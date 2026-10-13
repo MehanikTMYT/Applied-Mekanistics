@@ -24,14 +24,15 @@ public class ChemicalContainerItemStrategy implements ContainerItemStrategy<Meka
             return null;
         }
 
-        var handler = stack.getCapability(MekCapabilities.CHEMICAL.item());
+        var handler = net.neoforged.neoforge.transfer.access.ItemAccess.forStack(stack).getCapability(MekCapabilities.CHEMICAL.item());
 
         if (handler != null) {
-            var chemical = handler.extractChemical(Long.MAX_VALUE, Action.SIMULATE);
+            var chemical = mekanism.api.chemical.ChemicalStack.EMPTY;
+            for(int i=0;i<handler.size();i++) if(!handler.getResource(i).isEmpty()){chemical=handler.getResource(i).toStack((int)Math.min(Integer.MAX_VALUE,handler.getAmountAsLong(i)));break;}
             var key = MekanismKey.of(chemical);
 
             if (key != null) {
-                return new GenericStack(key, chemical.getAmount());
+                return new GenericStack(key, chemical.amount());
             }
         }
 
@@ -43,7 +44,7 @@ public class ChemicalContainerItemStrategy implements ContainerItemStrategy<Meka
     public ItemStack findCarriedContext(Player player, AbstractContainerMenu menu) {
         var carried = menu.getCarried();
 
-        if (carried.getCapability(MekCapabilities.CHEMICAL.item()) != null) {
+        if (net.neoforged.neoforge.transfer.access.ItemAccess.forStack(carried).getCapability(MekCapabilities.CHEMICAL.item()) != null) {
             return carried;
         }
 
@@ -54,7 +55,7 @@ public class ChemicalContainerItemStrategy implements ContainerItemStrategy<Meka
     public @Nullable ItemStack findPlayerSlotContext(Player player, int slot) {
         var carried = player.getInventory().getItem(slot);
 
-        if (carried.getCapability(MekCapabilities.CHEMICAL.item()) != null) {
+        if (net.neoforged.neoforge.transfer.access.ItemAccess.forStack(carried).getCapability(MekCapabilities.CHEMICAL.item()) != null) {
             return carried;
         }
 
@@ -63,36 +64,34 @@ public class ChemicalContainerItemStrategy implements ContainerItemStrategy<Meka
 
     @Override
     public long extract(ItemStack context, MekanismKey what, long amount, Actionable mode) {
-        var handler = context.getCapability(MekCapabilities.CHEMICAL.item());
+        var handler = net.neoforged.neoforge.transfer.access.ItemAccess.forStack(context).getCapability(MekCapabilities.CHEMICAL.item());
 
         if (handler == null) {
             return 0L;
         }
 
-        return handler.extractChemical(what.withAmount(amount), Action.fromFluidAction(mode.getFluidAction()))
-                .getAmount();
+        return ChemicalTransfer.extract(handler,what,amount,mode);
     }
 
     @Override
     public long insert(ItemStack context, MekanismKey what, long amount, Actionable mode) {
-        var handler = context.getCapability(MekCapabilities.CHEMICAL.item());
+        var handler = net.neoforged.neoforge.transfer.access.ItemAccess.forStack(context).getCapability(MekCapabilities.CHEMICAL.item());
 
         if (handler == null) {
             return 0L;
         }
 
-        return amount - handler.insertChemical(what.withAmount(amount), Action.fromFluidAction(mode.getFluidAction()))
-                .getAmount();
+        return ChemicalTransfer.insert(handler,what,amount,mode);
     }
 
     @Override
     public void playFillSound(Player player, MekanismKey what) {
-        player.playNotifySound(SoundEvents.BUCKET_FILL, SoundSource.PLAYERS, 1.0F, 1.0F);
+        player.playSound(SoundEvents.BUCKET_FILL, 1.0F, 1.0F);
     }
 
     @Override
     public void playEmptySound(Player player, MekanismKey what) {
-        player.playNotifySound(SoundEvents.BUCKET_EMPTY, SoundSource.PLAYERS, 1.0F, 1.0F);
+        player.playSound(SoundEvents.BUCKET_EMPTY, 1.0F, 1.0F);
     }
 
     @Override
