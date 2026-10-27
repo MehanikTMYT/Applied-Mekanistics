@@ -1,44 +1,74 @@
 plugins { id 'java-library'; id 'net.neoforged.moddev' version '2.0.146' }
-version = '1.6.0-port1'
+version = '1.6.0-port1-nl'
 group = 'me.ramidzkh'
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
-neoForge { version = '26.1.2.109'; mods { appmek { sourceSet sourceSets.main } }; runs { client { client() }; server { server(); programArgument '--nogui' } } }
-repositories { mavenCentral() }
+
+// fleet rebase (2026-10-26): NeoForge под наш runtime; deps — наша платформа (mavenLocal AE2/Mekanism),
+// JEI/Jade — публичные мавен-координаты; портSmokeVL-модв заменены на наши сборки.
+neoForge {
+    version = '26.1.2.122'
+    mods { appmek { sourceSet sourceSets.main } }
+    runs {
+        client { client() }
+        server {
+            server(); programArgument '--nogui'
+            gameDirectory = file('/root/home/agent-work/mekanism-port-queue/build/applied-mekanistics/server')
+            if (providers.gradleProperty('portSmoke').isPresent()) systemProperty 'appmek.smoke', 'true'
+        }
+    }
+}
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url = 'https://api.modrinth.com/maven' } // Jade
+    maven { url = 'https://maven.blamejared.com/' } // JEI
+    maven { url = 'https://maven.neoforged.net/releases' } // guideme (org.appliedenergistics)
+}
+
 dependencies {
- implementation files('libs/appliedenergistics2-26.1.12-beta.jar')
- runtimeOnly files('libs/guideme-26.1.12-beta.jar')
- implementation files('libs/Mekanism-Version-Locked-26.1.2-2.7.jar')
- compileOnly files('libs/jei-26.1.2-neoforge-29.37.0.99.jar')
- compileOnly files('libs/Jade-mc26.1-NeoForge-26.1.11.jar')
- compileOnly 'org.jetbrains:annotations:26.0.1'
+    implementation('org.appliedenergistics:appliedenergistics2:26.1.12-SNAPSHOT')
+    implementation('mekanism:Mekanism:26.1.2-10.8.0.homebaked')
+    compileOnly('mekanism:Mekanism:26.1.2-10.8.0.homebaked:additions')
+    compileOnly('org.jetbrains:annotations:26.0.1')
+    compileOnly('dev.emi:emi-neoforge:1.1.24-semi151a6c88+26.1.2')
+    compileOnly('maven.modrinth:jade:26.0.10+neoforge')
+    runtimeOnly('org.appliedenergistics:guideme:26.1.14-beta')
+    runtimeOnly('dev.emi:emi-neoforge:1.1.24-semi151a6c88+26.1.2')
+    // dev-server/runtime companions: наш стек (упрощение VL portSmoke)
+    runtimeOnly('mekanism:Mekanism:26.1.2-10.8.0.homebaked:generators')
+    runtimeOnly('mekanism:Mekanism:26.1.2-10.8.0.homebaked:tools')
+    runtimeOnly('mekanism:Mekanism:26.1.2-10.8.0.homebaked:additions')
 }
 sourceSets.main.resources.srcDir 'src/generated/resources'
-sourceSets.main.java { exclude 'me/ramidzkh/mekae2/data/**'; exclude 'me/ramidzkh/mekae2/integration/emi/**' }
+sourceSets.main.java { exclude 'me/ramidzkh/mekae2/data/**' }
 tasks.withType(JavaCompile).configureEach { options.encoding='UTF-8'; options.compilerArgs += ['-Xmaxerrs','1000'] }
-tasks.named('processResources') { filesMatching('META-INF/neoforge.mods.toml') { expand(version: '1.6.0-port1',loader_version_range:'[4,)',neo_version_range:'[26.1.2.109,)',ae2_version_range:'[26.1.12-beta,27)',mekanism_version_range:'[10.8.0,11)') } }
-tasks.named('jar') { archiveFileName='Applied-Mekanistics-Version-Locked-26.1.2-1.6.0-port1.jar'; from('LICENSE') { into 'META-INF' }
+tasks.named('processResources') { filesMatching('META-INF/neoforge.mods.toml') { expand(version: '1.6.0-port1-nl',loader_version_range:'[4,)',neo_version_range:'[26.1.2.122,)',ae2_version_range:'[26.1.12-beta,27)',mekanism_version_range:'[10.8.0,11)') } }
+tasks.named('jar') { archiveFileName='applied-mekanistics-26.1.2-1.6.0-port1-nl.jar'; from('LICENSE') { into 'META-INF' }
  from('THIRD-PARTY-NOTICES.md') { into 'META-INF' } }
 
-if(providers.gradleProperty('portSmoke').isPresent()) {
- dependencies { runtimeOnly files('libs/mekanism_extras-26.1.2-1.4.2-fix5-atm11-0.9.0.jar','libs/MekanismGenerators-Version-Locked-26.1.2-1.3.jar','libs/mekmm-26.1.2-2.0.0-port8-atm11-0.9.0.jar') }
- sourceSets.test.compileClasspath += sourceSets.main.compileClasspath
- neoForge.addModdingDependenciesTo(sourceSets.test)
- neoForge.mods.appmek.sourceSet sourceSets.test
- neoForge.runs.server.systemProperty 'appmek.smoke','true'
-}
-
-if(providers.gradleProperty('clientSmoke').isPresent()) {
- dependencies { runtimeOnly files('libs/jei-26.1.2-neoforge-29.37.0.99.jar') }
- neoForge.runs.client.systemProperty 'appmek.clientSmoke','true'
- neoForge.runs.client.programArguments.addAll('--quickPlaySingleplayer','appmek-test')
-}
 tasks.named('downloadAssets') { javaExecutable.set(javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }.map { it.executablePath.asFile.absolutePath }) }
 
 tasks.register('portSources', Jar) {
- archiveFileName='Applied-Mekanistics-Version-Locked-26.1.2-1.6.0-port1-sources.jar'
+ archiveFileName='applied-mekanistics-26.1.2-1.6.0-port1-nl-sources.jar'
  destinationDirectory=layout.buildDirectory.dir('libs')
  from('src/main/java')
  from('src/main/resources')
  from('LICENSE') { into 'META-INF' }
  from('THIRD-PARTY-NOTICES.md') { into 'META-INF' }
+}
+
+// The opt-in development harness must never be shipped in the release jar.
+tasks.named('jar') { exclude 'me/ramidzkh/mekae2/PortSmoke*' }
+
+// A server exiting normally is not sufficient evidence that the functional assertions passed.
+tasks.named('runServer') {
+    if (providers.gradleProperty('portSmoke').isPresent()) {
+        def resultFile = file('/root/home/agent-work/mekanism-port-queue/build/applied-mekanistics/server/appmek-smoke-result.txt')
+        doFirst { delete resultFile }
+        doLast {
+            if (!resultFile.exists() || resultFile.text.trim() != 'PASS') {
+                throw new GradleException('Applied Mekanistics functional smoke checks failed; inspect the server log')
+            }
+        }
+    }
 }

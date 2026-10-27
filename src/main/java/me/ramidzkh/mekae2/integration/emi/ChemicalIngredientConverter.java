@@ -7,7 +7,7 @@ import me.ramidzkh.mekae2.ae2.MekanismKey;
 import mekanism.api.IMekanismAccess;
 import mekanism.api.chemical.Chemical;
 
-import appeng.api.integrations.emi.EmiStackConverter;
+import appeng.client.api.integrations.emi.EmiStackConverter;
 import appeng.api.stacks.GenericStack;
 
 public final class ChemicalIngredientConverter implements EmiStackConverter {
@@ -20,7 +20,7 @@ public final class ChemicalIngredientConverter implements EmiStackConverter {
     @Override
     public @Nullable EmiStack toEmiStack(GenericStack stack) {
         if (stack.what() instanceof MekanismKey key) {
-            return IMekanismAccess.INSTANCE.emiHelper().createEmiStack(key.getStack());
+            return IMekanismAccess.INSTANCE.emiHelper().createEmiStack(key.getStack()).setAmount(stack.amount());
         }
 
         return null;
@@ -34,7 +34,7 @@ public final class ChemicalIngredientConverter implements EmiStackConverter {
             var what = MekanismKey.of(chemical);
 
             if (what != null) {
-                return new GenericStack(what, stack.amount());
+                return new GenericStack(what, stack.getAmount());
             }
         }
 

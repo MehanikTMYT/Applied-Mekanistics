@@ -1,7 +1,5 @@
 package me.ramidzkh.mekae2.ae2.stack;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -10,7 +8,6 @@ import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
 
 import me.ramidzkh.mekae2.MekCapabilities;
 import me.ramidzkh.mekae2.ae2.MekanismKey;
-import mekanism.api.Action;
 import mekanism.api.chemical.ChemicalResource;
 import net.neoforged.neoforge.transfer.ResourceHandler;
 import me.ramidzkh.mekae2.ae2.ChemicalTransfer;
@@ -23,7 +20,6 @@ import appeng.api.storage.StorageHelper;
 
 public class MekanismStackExportStrategy implements StackExportStrategy {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MekanismStackExportStrategy.class);
     private final BlockCapabilityCache<ResourceHandler<ChemicalResource>, Direction> cache;
 
     public MekanismStackExportStrategy(ServerLevel level, BlockPos fromPos, Direction fromSide) {
@@ -42,42 +38,14 @@ public class MekanismStackExportStrategy implements StackExportStrategy {
             return 0;
         }
 
-        var inv = context.getInternalStorage();
-
-        var extracted = StorageHelper.poweredExtraction(
-                context.getEnergySource(),
-                inv.getInventory(),
-                what,
-                amount,
-                context.getActionSource(),
-                Actionable.SIMULATE);
-
-        var wasInserted = ChemicalTransfer.insert(storage,mekanismKey,extracted,Actionable.SIMULATE);
-
-        if (wasInserted > 0) {
-            extracted = StorageHelper.poweredExtraction(
-                    context.getEnergySource(),
-                    inv.getInventory(),
-                    what,
-                    wasInserted,
-                    context.getActionSource(),
-                    Actionable.MODULATE);
-
-            wasInserted = ChemicalTransfer.insert(storage,mekanismKey,extracted,Actionable.MODULATE);
-
-            if (wasInserted < extracted) {
-                // Be nice and try to give the overflow back
-                var leftover = extracted - wasInserted;
-                leftover -= inv.getInventory().insert(what, leftover, Actionable.MODULATE, context.getActionSource());
-
-                if (leftover > 0) {
-                    LOGGER.error("Storage export: adjacent block unexpectedly refused insert, voided {}x{}", leftover,
-                            what);
-                }
-            }
-        }
-
-        return wasInserted;
+        var inv = context.getInternalStorage().getInventory();
+        long available = StorageHelper.poweredExtraction(context.getEnergySource(), inv, what,
+                ChemicalTransfer.limit(amount), context.getActionSource(), Actionable.SIMULATE);
+        return ChemicalTransfer.exchange(storage, mekanismKey, available, true,
+                reserved -> (int) StorageHelper.poweredExtraction(context.getEnergySource(), inv, what,
+                        reserved, context.getActionSource(), Actionable.SIMULATE),
+                reserved -> (int) StorageHelper.poweredExtraction(context.getEnergySource(), inv, what,
+                        reserved, context.getActionSource(), Actionable.MODULATE));
     }
 
     @Override

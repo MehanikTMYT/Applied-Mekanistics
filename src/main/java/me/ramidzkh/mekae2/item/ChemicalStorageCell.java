@@ -20,7 +20,8 @@ public class ChemicalStorageCell extends BasicStorageCell {
     public boolean isBlackListed(ItemStack cellItem, AEKey requestedAddition) {
         if (requestedAddition instanceof MekanismKey key) {
             // Disallow storage cells to contain radioactive stuff
-            return !ChemicalAttributeValidator.DEFAULT.process(key.getStack());
+            return key.getStack().getChemical().isRadioactive()
+                    || !ChemicalAttributeValidator.DEFAULT.process(key.getStack());
         }
 
         return true;

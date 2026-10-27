@@ -4,7 +4,6 @@ import net.minecraft.network.chat.Component;
 
 import me.ramidzkh.mekae2.AMText;
 import me.ramidzkh.mekae2.ae2.MekanismKey;
-import mekanism.api.Action;
 import mekanism.api.chemical.ChemicalResource;
 import net.neoforged.neoforge.transfer.ResourceHandler;
 import me.ramidzkh.mekae2.ae2.ChemicalTransfer;
@@ -33,7 +32,7 @@ public record ChemicalHandlerFacade(ResourceHandler<ChemicalResource> handler, b
         var inserted = ChemicalTransfer.insert(handler,key,amount,mode);
 
         if (inserted > 0 && mode == Actionable.MODULATE) {
-            this.changeListener.run();
+            ChemicalTransfer.afterCommit(this.changeListener);
         }
 
         return inserted;
@@ -48,7 +47,7 @@ public record ChemicalHandlerFacade(ResourceHandler<ChemicalResource> handler, b
         var extracted = ChemicalTransfer.extract(handler,key,amount,mode);
 
         if (extracted > 0 && mode == Actionable.MODULATE) {
-            this.changeListener.run();
+            ChemicalTransfer.afterCommit(this.changeListener);
         }
 
         return extracted;
@@ -70,8 +69,10 @@ public record ChemicalHandlerFacade(ResourceHandler<ChemicalResource> handler, b
             }
 
             // Skip resources that cannot be extracted if that filter was enabled
-            if (extractableOnly && ChemicalTransfer.extract(handler,key,1,Actionable.SIMULATE)==0) {
-                continue;
+            if (extractableOnly) {
+                try (var tx = ChemicalTransfer.open()) {
+                    if (handler.extract(i, handler.getResource(i), 1, tx) == 0) continue;
+                }
             }
 
             out.add(key, Math.min(handler.getAmountAsLong(i), MAX_REPORTED_AMOUNT));

@@ -12,7 +12,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
 import me.ramidzkh.mekae2.AMText;
-import mekanism.api.Action;
+import me.ramidzkh.mekae2.ae2.ChemicalTransfer;
 import net.neoforged.neoforge.transfer.item.ItemResource;
 import mekanism.api.inventory.qio.IQIOComponent;
 import mekanism.api.inventory.qio.IQIOFrequency;
@@ -48,6 +48,7 @@ public class QioStorageAdapter<DASHBOARD extends BlockEntity & IQIOComponent & I
     @Nullable
     public IQIOFrequency getFrequency() {
         // Check dashboard facing.
+        if (dashboard.isRemoved() || dashboard.getLevel() == null) return null;
         if (dashboard.getBlockState().getValue(BlockStateProperties.FACING).getOpposite() != queriedSide) {
             return null;
         }
@@ -82,7 +83,11 @@ public class QioStorageAdapter<DASHBOARD extends BlockEntity & IQIOComponent & I
                 return 0;
             }
 
-            try (var tx = net.neoforged.neoforge.transfer.transaction.Transaction.openRoot()) { long moved=freq.massInsert(ItemResource.of(itemKey.toStack()), amount, tx); if(mode==Actionable.MODULATE)tx.commit(); return moved; }
+            try (var tx = ChemicalTransfer.open()) {
+                long moved = freq.massInsert(itemKey.toResource(), amount, tx);
+                if (mode == Actionable.MODULATE) tx.commit();
+                return moved;
+            }
         }
 
         return 0;
@@ -97,7 +102,11 @@ public class QioStorageAdapter<DASHBOARD extends BlockEntity & IQIOComponent & I
                 return 0;
             }
 
-            try (var tx = net.neoforged.neoforge.transfer.transaction.Transaction.openRoot()) { long moved=freq.massExtract(ItemResource.of(itemKey.toStack()), amount, tx); if(mode==Actionable.MODULATE)tx.commit(); return moved; }
+            try (var tx = ChemicalTransfer.open()) {
+                long moved = freq.massExtract(itemKey.toResource(), amount, tx);
+                if (mode == Actionable.MODULATE) tx.commit();
+                return moved;
+            }
         }
 
         return 0;

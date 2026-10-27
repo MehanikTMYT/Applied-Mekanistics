@@ -8,7 +8,6 @@ import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
 import me.ramidzkh.mekae2.MekCapabilities;
 import me.ramidzkh.mekae2.ae2.MekanismKey;
 import me.ramidzkh.mekae2.ae2.MekanismKeyType;
-import mekanism.api.Action;
 import mekanism.api.chemical.ChemicalResource;
 import net.neoforged.neoforge.transfer.ResourceHandler;
 import me.ramidzkh.mekae2.ae2.ChemicalTransfer;
@@ -16,7 +15,6 @@ import me.ramidzkh.mekae2.ae2.ChemicalTransfer;
 import appeng.api.behaviors.StackImportStrategy;
 import appeng.api.behaviors.StackTransferContext;
 import appeng.api.config.Actionable;
-import appeng.core.AELog;
 
 public class MekanismStackImportStrategy implements StackImportStrategy {
 
@@ -54,33 +52,18 @@ public class MekanismStackImportStrategy implements StackImportStrategy {
                 continue;
             }
 
-            // Check how much of *this* resource we can actually insert into the network, it might be 0
-            // if the cells are partitioned or there's not enough types left, etc.
-            var amountForThisResource = inv.getInventory().insert(resource, remainingTransferAmount,
-                    Actionable.SIMULATE,
-                    context.getActionSource());
-
-            // Try to simulate-extract it
-            var amount = ChemicalTransfer.extract(handler,resource,amountForThisResource,Actionable.MODULATE);
-
-            if (amount > 0) {
-                var inserted = inv.getInventory().insert(resource, amount, Actionable.MODULATE,
-                        context.getActionSource());
-
-                if (inserted < amount) {
-                    // Be nice and try to give the overflow back
-                    var leftover = amount - inserted;
-                    leftover -= ChemicalTransfer.insert(handler,resource,leftover,Actionable.MODULATE);
-
-                    if (leftover > 0) {
-                        AELog.warn("Extracted %dx%s from adjacent storage and voided it because network refused insert",
-                                leftover, resource);
-                    }
-                }
-
-                var opsUsed = Math.max(1, inserted / MekanismKeyType.TYPE.getAmountPerOperation());
-                context.reduceOperationsRemaining(opsUsed);
-                remainingTransferAmount -= inserted;
+            long allowed = Math.min(remainingTransferAmount, handler.getAmountAsLong(i));
+            long acceptable = inv.getInventory().insert(resource, ChemicalTransfer.limit(allowed),
+                    Actionable.SIMULATE, context.getActionSource());
+            int inserted = ChemicalTransfer.exchange(handler, resource, acceptable, false,
+                    reserved -> (int) inv.getInventory().insert(resource, reserved, Actionable.SIMULATE,
+                            context.getActionSource()),
+                    reserved -> (int) inv.getInventory().insert(resource, reserved, Actionable.MODULATE,
+                            context.getActionSource()));
+            if (inserted > 0) {
+                long perOperation = MekanismKeyType.TYPE.getAmountPerOperation();
+                context.reduceOperationsRemaining((inserted + perOperation - 1) / perOperation);
+                remainingTransferAmount = Math.max(0, context.getOperationsRemaining()) * perOperation;
             }
         }
 
